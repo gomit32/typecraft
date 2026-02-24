@@ -1,0 +1,41 @@
+.time-selector {
+  margin-bottom: 20px;
+}
+
+.time-options {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.time-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.time-btn:hover {
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+  transform: translateY(-2px);
+}
+
+.time-btn.active {
+  border-color: var(--accent-primary);
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: var(--shadow-glow);
+}
+
+.time-icon {
+  font-size: 1.1rem;
+}

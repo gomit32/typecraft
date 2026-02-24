@@ -1,0 +1,62 @@
+.timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.timer-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+}
+
+.timer-icon {
+  font-size: 1.2rem;
+}
+
+.timer-value {
+  font-family: var(--font-mono);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  min-width: 80px;
+  text-align: center;
+}
+
+.timer.low .timer-value {
+  color: var(--accent-warning);
+  animation: pulse 1s ease infinite;
+}
+
+.timer.critical .timer-value {
+  color: var(--accent-danger);
+  animation: pulse 0.5s ease infinite;
+}
+
+.timer-bar {
+  width: 200px;
+  height: 4px;
+  background: var(--bg-tertiary);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.timer-bar-fill {
+  height: 100%;
+  background: var(--gradient-primary);
+  border-radius: 2px;
+  transition: width 0.3s linear;
+}
+
+.timer.low .timer-bar-fill {
+  background: var(--accent-warning);
+}
+
+.timer.critical .timer-bar-fill {
+  background: var(--accent-danger);
+}

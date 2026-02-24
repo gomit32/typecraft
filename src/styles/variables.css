@@ -1,0 +1,104 @@
+:root {
+  /* ===== DARK THEME (Default) ===== */
+  --bg-primary: #0a0a1a;
+  --bg-secondary: #111128;
+  --bg-tertiary: #1a1a3e;
+  --bg-card: #16163a;
+  --bg-card-hover: #1e1e4a;
+  --bg-input: #0d0d2b;
+
+  --text-primary: #e4e4f7;
+  --text-secondary: #9999bb;
+  --text-muted: #666688;
+  --text-highlight: #ffffff;
+
+  --accent-primary: #6c63ff;
+  --accent-secondary: #ff6584;
+  --accent-tertiary: #00d4aa;
+  --accent-warning: #ffb347;
+  --accent-danger: #ff4757;
+  --accent-success: #2ed573;
+
+  --gradient-primary: linear-gradient(135deg, #6c63ff, #3b82f6);
+  --gradient-secondary: linear-gradient(135deg, #ff6584, #ff8a5c);
+  --gradient-tertiary: linear-gradient(135deg, #00d4aa, #00b894);
+  --gradient-hero: linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 50%, #0a0a1a 100%);
+  --gradient-card: linear-gradient(145deg, #16163a, #1e1e4a);
+
+  --border-color: #2a2a5a;
+  --border-light: rgba(108, 99, 255, 0.2);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px rgba(108, 99, 255, 0.3);
+  --shadow-glow-accent: 0 0 30px rgba(108, 99, 255, 0.4);
+
+  /* ===== KEYBOARD ===== */
+  --key-bg: #1e1e4a;
+  --key-bg-active: #6c63ff;
+  --key-text: #9999bb;
+  --key-text-active: #ffffff;
+  --key-border: #2a2a5a;
+  --key-shadow: 0 3px 0 #0a0a1a;
+
+  /* ===== TYPING ===== */
+  --char-correct: #2ed573;
+  --char-incorrect: #ff4757;
+  --char-current: #6c63ff;
+  --char-upcoming: #666688;
+  --cursor-color: #6c63ff;
+
+  /* ===== SIZES ===== */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 50%;
+
+  --font-primary: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-display: 'Poppins', 'Inter', sans-serif;
+
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+
+  --container-max: 1200px;
+  --navbar-height: 70px;
+}
+
+/* ===== LIGHT THEME ===== */
+[data-theme="light"] {
+  --bg-primary: #f0f2ff;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e8eaff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f5f6ff;
+  --bg-input: #f0f2ff;
+
+  --text-primary: #1a1a3e;
+  --text-secondary: #555577;
+  --text-muted: #8888aa;
+  --text-highlight: #000000;
+
+  --border-color: #d0d0e0;
+  --border-light: rgba(108, 99, 255, 0.15);
+
+  --shadow-sm: 0 2px 8px rgba(100, 100, 150, 0.1);
+  --shadow-md: 0 4px 16px rgba(100, 100, 150, 0.15);
+  --shadow-lg: 0 8px 32px rgba(100, 100, 150, 0.2);
+  --shadow-glow: 0 0 20px rgba(108, 99, 255, 0.15);
+
+  --gradient-hero: linear-gradient(135deg, #f0f2ff 0%, #e8eaff 50%, #f0f2ff 100%);
+  --gradient-card: linear-gradient(145deg, #ffffff, #f5f6ff);
+
+  --key-bg: #e8eaff;
+  --key-bg-active: #6c63ff;
+  --key-text: #555577;
+  --key-text-active: #ffffff;
+  --key-border: #d0d0e0;
+  --key-shadow: 0 3px 0 #c0c0d0;
+
+  --char-upcoming: #8888aa;
+}

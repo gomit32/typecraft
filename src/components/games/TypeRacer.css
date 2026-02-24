@@ -1,0 +1,137 @@
+.type-racer {
+  max-width: 750px;
+  margin: 0 auto;
+  background: var(--gradient-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 30px;
+  animation: fadeInUp 0.5s ease;
+}
+
+.race-tracks {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.race-track {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.racer-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  min-width: 60px;
+  color: var(--text-secondary);
+}
+
+.track-bar {
+  flex: 1;
+  height: 35px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--border-color);
+}
+
+.track-fill {
+  height: 100%;
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 5px;
+  font-size: 1.2rem;
+  transition: width 0.2s ease;
+  min-width: 30px;
+}
+
+.track-fill.player {
+  background: var(--gradient-primary);
+}
+
+.track-fill.bot {
+  background: var(--gradient-secondary);
+}
+
+.racer-wpm {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 70px;
+  text-align: right;
+}
+
+.race-text {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  line-height: 2;
+  padding: 20px;
+  background: var(--bg-input);
+  border-radius: var(--radius-md);
+  margin-bottom: 15px;
+  border: 1px solid var(--border-color);
+}
+
+.race-char {
+  color: var(--char-upcoming);
+}
+
+.race-char.correct {
+  color: var(--char-correct);
+}
+
+.race-char.incorrect {
+  color: var(--char-incorrect);
+  background: rgba(255, 71, 87, 0.15);
+}
+
+.race-char.current {
+  border-left: 2px solid var(--cursor-color);
+  animation: cursorBlink 1s infinite;
+}
+
+.race-input {
+  width: 100%;
+  min-height: 80px;
+  padding: 15px;
+  background: var(--bg-input);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  resize: none;
+  transition: all var(--transition-fast);
+}
+
+.race-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-glow);
+}
+
+.race-result {
+  text-align: center;
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  animation: scaleIn 0.3s ease;
+}
+
+.race-result h3 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: var(--accent-primary);
+}
+
+.race-result p {
+  color: var(--text-secondary);
+  margin-bottom: 15px;
+}

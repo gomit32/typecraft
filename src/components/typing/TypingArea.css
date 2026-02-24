@@ -1,0 +1,85 @@
+.typing-area {
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 30px;
+  min-height: 180px;
+  max-height: 300px;
+  overflow-y: auto;
+  cursor: text;
+  outline: none;
+  transition: all var(--transition-normal);
+  position: relative;
+}
+
+.typing-area:focus {
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-glow);
+}
+
+.typing-area.finished {
+  border-color: var(--accent-success);
+  box-shadow: 0 0 20px rgba(46, 213, 115, 0.3);
+}
+
+.typing-text {
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  line-height: 2.2;
+  letter-spacing: 0.5px;
+  word-wrap: break-word;
+}
+
+.char {
+  position: relative;
+  transition: color var(--transition-fast);
+}
+
+.char.upcoming {
+  color: var(--char-upcoming);
+}
+
+.char.current {
+  color: var(--text-primary);
+  border-left: 2px solid var(--cursor-color);
+  animation: cursorBlink 1s infinite;
+  margin-left: -1px;
+  padding-left: 1px;
+}
+
+.char.correct {
+  color: var(--char-correct);
+}
+
+.char.incorrect {
+  color: var(--char-incorrect);
+  background: rgba(255, 71, 87, 0.15);
+  border-radius: 2px;
+  text-decoration: underline;
+  text-decoration-color: var(--char-incorrect);
+}
+
+.typing-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  animation: pulse 2s ease infinite;
+}
+
+.typing-area:focus .typing-hint {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .typing-text {
+    font-size: 1.1rem;
+    line-height: 2;
+  }
+
+  .typing-area {
+    padding: 20px;
+  }
+}

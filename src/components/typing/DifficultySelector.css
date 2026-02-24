@@ -1,0 +1,67 @@
+.difficulty-selector {
+  margin-bottom: 20px;
+}
+
+.selector-label {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.difficulty-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.difficulty-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 12px;
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  color: var(--text-secondary);
+}
+
+.difficulty-btn:hover {
+  border-color: var(--btn-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(108, 99, 255, 0.2);
+}
+
+.difficulty-btn.active {
+  border-color: var(--btn-color);
+  background: var(--btn-gradient);
+  color: white;
+  box-shadow: 0 4px 20px rgba(108, 99, 255, 0.3);
+}
+
+.diff-icon {
+  font-size: 1.5rem;
+}
+
+.diff-label {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.diff-desc {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .difficulty-options {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

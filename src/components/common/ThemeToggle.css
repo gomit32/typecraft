@@ -1,0 +1,49 @@
+.theme-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.toggle-track {
+  width: 50px;
+  height: 28px;
+  border-radius: 14px;
+  padding: 3px;
+  transition: all var(--transition-normal);
+  position: relative;
+}
+
+.toggle-track.dark {
+  background: linear-gradient(135deg, #1a1a3e, #2a2a5a);
+  border: 1px solid var(--border-color);
+}
+
+.toggle-track.light {
+  background: linear-gradient(135deg, #ffd93d, #ff8c00);
+  border: 1px solid rgba(255, 140, 0, 0.3);
+}
+
+.toggle-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: var(--accent-primary);
+  transition: all var(--transition-normal);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-track.dark .toggle-thumb {
+  transform: translateX(0);
+  color: #ffd93d;
+}
+
+.toggle-track.light .toggle-thumb {
+  transform: translateX(22px);
+  color: #ff8c00;
+}

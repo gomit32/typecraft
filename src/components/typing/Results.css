@@ -1,0 +1,135 @@
+.results {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 40px;
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.results-header {
+  margin-bottom: 25px;
+}
+
+.results-emoji {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.results-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+}
+
+.results-subtitle {
+  color: var(--text-secondary);
+  margin-top: 5px;
+  font-size: 1rem;
+}
+
+/* WPM Hero */
+.wpm-hero {
+  padding: 30px;
+  margin: 20px auto 30px;
+  max-width: 250px;
+  border: 3px solid;
+  border-radius: 24px;
+  background: var(--bg-tertiary);
+}
+
+.wpm-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 5rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.wpm-unit {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-top: 5px;
+}
+
+.wpm-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Stats Grid */
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.result-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  transition: all 0.25s ease;
+}
+
+.result-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.result-item svg {
+  font-size: 1.2rem;
+}
+
+.ri-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.ri-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.results-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.results-actions .btn-primary,
+.results-actions .btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+@media (max-width: 500px) {
+  .results-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .wpm-number {
+    font-size: 3.5rem;
+  }
+
+  .results {
+    padding: 25px 15px;
+  }
+}
