@@ -11,7 +11,8 @@ const getWPMRating = (wpm) => {
   if (wpm >= 51) return { label: 'Above Average', emoji: '🚴', color: '#ffa502' };
   if (wpm >= 36) return { label: 'Average', emoji: '🏃', color: '#ffb347' };
   if (wpm >= 21) return { label: 'Below Average', emoji: '🚶', color: '#ff6348' };
-  return { label: 'Beginner', emoji: '🐢', color: '#ff4757' };
+  if (wpm >= 1) return { label: 'Beginner', emoji: '🐢', color: '#ff4757' };
+  return { label: 'Try Again!', emoji: '💪', color: '#ff4757' };
 };
 
 const Results = ({ results, onRestart, onNewTest }) => {
@@ -19,7 +20,7 @@ const Results = ({ results, onRestart, onNewTest }) => {
   const rating = getWPMRating(results.wpm);
 
   useEffect(() => {
-    if (results.wpm > 40) {
+    if (results.wpm > 30) {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 5000);
     }
@@ -31,11 +32,10 @@ const Results = ({ results, onRestart, onNewTest }) => {
 
       <div className="results-header">
         <span className="results-emoji">{rating.emoji}</span>
-        <h2 className="results-title" style={{ color: rating.color }}>{rating.label}!</h2>
+        <h2 className="results-title" style={{ color: rating.color }}>{rating.label}</h2>
         <p className="results-subtitle">Here's how you performed</p>
       </div>
 
-      {/* Main WPM Display */}
       <div className="wpm-hero" style={{ borderColor: rating.color }}>
         <div className="wpm-number" style={{ color: rating.color }}>{results.wpm}</div>
         <div className="wpm-unit">WPM</div>
@@ -57,14 +57,14 @@ const Results = ({ results, onRestart, onNewTest }) => {
 
         <div className="result-item">
           <FaKeyboard style={{ color: '#6c63ff' }} />
-          <span className="ri-value">{results.correctChars}</span>
-          <span className="ri-label">Correct Chars</span>
+          <span className="ri-value">{results.correctWords || results.correctChars}</span>
+          <span className="ri-label">Correct Words</span>
         </div>
 
         <div className="result-item">
           <FaKeyboard style={{ color: '#ff4757' }} />
-          <span className="ri-value">{results.incorrectChars}</span>
-          <span className="ri-label">Errors</span>
+          <span className="ri-value">{results.totalWordsAttempted ? results.totalWordsAttempted - (results.correctWords || 0) : results.incorrectChars}</span>
+          <span className="ri-label">Wrong Words</span>
         </div>
 
         <div className="result-item">
@@ -75,23 +75,21 @@ const Results = ({ results, onRestart, onNewTest }) => {
 
         <div className="result-item">
           <FaChartLine style={{ color: '#ff6584' }} />
-          <span className="ri-value">{results.cpm}</span>
-          <span className="ri-label">CPM</span>
+          <span className="ri-value">{results.totalChars}</span>
+          <span className="ri-label">Keystrokes</span>
         </div>
       </div>
 
       <div className="results-actions">
-        <button className="btn-primary" onClick={onRestart}>
+        <button className="btn-primary results-btn" onClick={onRestart}>
           <FaRedo /> Try Again
         </button>
-        <button className="btn-secondary" onClick={onNewTest}>
-          <FaCog /> New Test
+        <button className="btn-secondary results-btn" onClick={onNewTest}>
+          ⚙️ New Test
         </button>
       </div>
     </div>
   );
 };
-
-const FaCog = () => <span>⚙️</span>;
 
 export default Results;
