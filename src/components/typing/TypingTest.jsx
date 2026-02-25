@@ -54,12 +54,25 @@ const TypingTest = () => {
   const [currentKey, setCurrentKey] = useState('');
   const [totalKeystrokes, setTotalKeystrokes] = useState(0);
   const [correctKeystrokes, setCorrectKeystrokes] = useState(0);
-
   const [timeLeft, setTimeLeft] = useState(timeLimit);
+
+  // REFS to track latest values (fixes stale closure bug)
+  const wordResultsRef = useRef([]);
+  const totalKeystrokesRef = useRef(0);
+  const correctKeystrokesRef = useRef(0);
+  const currentWordIndexRef = useRef(0);
+  const isFinishedRef = useRef(false);
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
   const inputRef = useRef(null);
   const { playSound } = useSound();
+
+  // Keep refs in sync with state
+  useEffect(() => { wordResultsRef.current = wordResults; }, [wordResults]);
+  useEffect(() => { totalKeystrokesRef.current = totalKeystrokes; }, [totalKeystrokes]);
+  useEffect(() => { correctKeystrokesRef.current = correctKeystrokes; }, [correctKeystrokes]);
+  useEffect(() => { currentWordIndexRef.current = currentWordIndex; }, [currentWordIndex]);
+  useEffect(() => { isFinishedRef.current = isFinished; }, [isFinished]);
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) {
@@ -69,31 +82,54 @@ const TypingTest = () => {
   }, []);
 
   const finishTest = useCallback(() => {
+    if (isFinishedRef.current) return;
+
     stopTimer();
     setIsFinished(true);
+    isFinishedRef.current = true;
+
+    // Read from REFS not state
+    const finalWordResults = wordResultsRef.current;
+    const finalTotalKeystrokes = totalKeystrokesRef.current;
+    const finalCorrectKeystrokes = correctKeystrokesRef.current;
 
     const elapsed = startTimeRef.current
       ? Math.min((Date.now() - startTimeRef.current) / 1000, timeLimit)
       : timeLimit;
 
     const minutes = elapsed / 60;
-    const correctWords = wordResults.filter(w => w === 'correct').length;
-    const totalWordsTyped = wordResults.length;
+
+    const correctWords = finalWordResults.filter(w => w === 'correct').length;
+    const totalWordsTyped = finalWordResults.length;
+    const incorrectWords = totalWordsTyped - correctWords;
+
+    // WPM = correct words / minutes
     const wpm = minutes > 0 ? Math.round(correctWords / minutes) : 0;
+
+    // Raw WPM = all words attempted / minutes
     const rawWpm = minutes > 0 ? Math.round(totalWordsTyped / minutes) : 0;
-    const accuracy = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 0;
-    const cpm = elapsed > 0 ? Math.round((correctKeystrokes / elapsed) * 60) : 0;
+
+    // Accuracy based on keystrokes
+    const accuracy = finalTotalKeystrokes > 0
+      ? Math.round((finalCorrectKeystrokes / finalTotalKeystrokes) * 100)
+      : 0;
+
+    // CPM
+    const cpm = elapsed > 0
+      ? Math.round((finalCorrectKeystrokes / elapsed) * 60)
+      : 0;
 
     const testResults = {
-      wpm,
-      rawWPM: rawWpm,
+      wpm: Math.max(wpm, 0),
+      rawWPM: Math.max(rawWpm, 0),
       accuracy,
-      correctChars: correctKeystrokes,
-      incorrectChars: totalKeystrokes - correctKeystrokes,
-      totalChars: totalKeystrokes,
+      correctChars: finalCorrectKeystrokes,
+      incorrectChars: finalTotalKeystrokes - finalCorrectKeystrokes,
+      totalChars: finalTotalKeystrokes,
       timeInSeconds: Math.round(elapsed),
       cpm,
       correctWords,
+      incorrectWords,
       totalWordsAttempted: totalWordsTyped
     };
 
@@ -106,8 +142,8 @@ const TypingTest = () => {
     incrementTests();
     updateStreak();
     addXP(Math.max(Math.round(wpm * (accuracy / 100)), 1));
-  }, [stopTimer, timeLimit, wordResults, totalKeystrokes, correctKeystrokes,
-    difficulty, addToHistory, updateBestWPM, incrementTests, addXP, updateStreak, playSound]);
+  }, [stopTimer, timeLimit, difficulty, addToHistory, updateBestWPM,
+    incrementTests, addXP, updateStreak, playSound]);
 
   const startTimer = useCallback(() => {
     if (timerRef.current) return;
@@ -125,7 +161,7 @@ const TypingTest = () => {
   }, [timeLimit, finishTest]);
 
   const handleInput = useCallback((e) => {
-    if (isFinished) return;
+    if (isFinishedRef.current) return;
 
     const value = e.target.value;
 
@@ -137,53 +173,62 @@ const TypingTest = () => {
     // Space pressed = submit word
     if (value.endsWith(' ')) {
       const typed = value.trim();
-      const expected = words[currentWordIndex];
+      const expected = words[currentWordIndexRef.current];
 
       if (typed.length === 0) return;
 
-      // Check if word is correct
       const isCorrect = typed === expected;
-      setWordResults(prev => [...prev, isCorrect ? 'correct' : 'incorrect']);
 
-      // Count keystrokes
-      const wordLen = expected.length;
-      setTotalKeystrokes(prev => prev + typed.length);
+      // Update word results
+      const newWordResults = [...wordResultsRef.current, isCorrect ? 'correct' : 'incorrect'];
+      setWordResults(newWordResults);
+      wordResultsRef.current = newWordResults;
+
+      // Update keystrokes
+      const newTotalKeystrokes = totalKeystrokesRef.current + typed.length;
+      setTotalKeystrokes(newTotalKeystrokes);
+      totalKeystrokesRef.current = newTotalKeystrokes;
 
       if (isCorrect) {
-        setCorrectKeystrokes(prev => prev + wordLen);
+        const newCorrectKeystrokes = correctKeystrokesRef.current + expected.length;
+        setCorrectKeystrokes(newCorrectKeystrokes);
+        correctKeystrokesRef.current = newCorrectKeystrokes;
         playSound('keypress');
       } else {
-        // Count correct characters within the word
         let correctCharsInWord = 0;
         for (let i = 0; i < Math.min(typed.length, expected.length); i++) {
           if (typed[i] === expected[i]) correctCharsInWord++;
         }
-        setCorrectKeystrokes(prev => prev + correctCharsInWord);
+        const newCorrectKeystrokes = correctKeystrokesRef.current + correctCharsInWord;
+        setCorrectKeystrokes(newCorrectKeystrokes);
+        correctKeystrokesRef.current = newCorrectKeystrokes;
         playSound('error');
       }
 
       // Move to next word
-      setCurrentWordIndex(prev => prev + 1);
+      const newWordIndex = currentWordIndexRef.current + 1;
+      setCurrentWordIndex(newWordIndex);
+      currentWordIndexRef.current = newWordIndex;
       setCurrentInput('');
 
-      // Check if all words done
-      if (currentWordIndex + 1 >= words.length) {
+      if (newWordIndex >= words.length) {
         finishTest();
       }
       return;
     }
 
     setCurrentInput(value);
-    setCurrentKey(value.length > 0 ? value[value.length - 1] : '');
-  }, [isFinished, isStarted, words, currentWordIndex, startTimer, finishTest, playSound]);
+    if (value.length > 0) {
+      setCurrentKey(value[value.length - 1]);
+    }
+  }, [isStarted, words, startTimer, finishTest, playSound]);
 
   useEffect(() => {
     return () => stopTimer();
   }, [stopTimer]);
 
-  const handleStartTest = () => {
-    const text = getTextForDifficulty(difficulty, timeLimit);
-    setWords(text.split(' '));
+  const resetAll = () => {
+    stopTimer();
     setCurrentWordIndex(0);
     setCurrentInput('');
     setWordResults([]);
@@ -195,39 +240,38 @@ const TypingTest = () => {
     setTimeLeft(timeLimit);
     setShowResults(false);
     setResults(null);
-    setShowSettings(false);
+    wordResultsRef.current = [];
+    totalKeystrokesRef.current = 0;
+    correctKeystrokesRef.current = 0;
+    currentWordIndexRef.current = 0;
+    isFinishedRef.current = false;
     startTimeRef.current = null;
+  };
+
+  const handleStartTest = () => {
+    const text = getTextForDifficulty(difficulty, timeLimit);
+    setWords(text.split(' '));
+    resetAll();
+    setShowSettings(false);
     setTimeout(() => inputRef.current?.focus(), 100);
   };
 
   const handleRestart = () => {
-    stopTimer();
-    setCurrentWordIndex(0);
-    setCurrentInput('');
-    setWordResults([]);
-    setIsStarted(false);
-    setIsFinished(false);
-    setCurrentKey('');
-    setTotalKeystrokes(0);
-    setCorrectKeystrokes(0);
-    setTimeLeft(timeLimit);
-    setShowResults(false);
-    setResults(null);
-    startTimeRef.current = null;
+    resetAll();
     setTimeout(() => inputRef.current?.focus(), 100);
   };
 
   const handleNewTest = () => {
-    stopTimer();
-    setShowResults(false);
-    setResults(null);
+    resetAll();
     setShowSettings(true);
   };
 
+  // Show results
   if (showResults && results) {
     return <Results results={results} onRestart={handleRestart} onNewTest={handleNewTest} />;
   }
 
+  // Show settings
   if (showSettings) {
     return (
       <div className="typing-test">
@@ -272,10 +316,10 @@ const TypingTest = () => {
     );
   }
 
-  // Calculate live stats
+  // Live stats calculation
   const elapsed = startTimeRef.current ? (Date.now() - startTimeRef.current) / 1000 / 60 : 0;
   const liveCorrectWords = wordResults.filter(w => w === 'correct').length;
-  const liveWPM = elapsed > 0 ? Math.round(liveCorrectWords / elapsed) : 0;
+  const liveWPM = elapsed > 0.05 ? Math.round(liveCorrectWords / elapsed) : 0;
   const liveAccuracy = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 100;
 
   return (
@@ -296,7 +340,6 @@ const TypingTest = () => {
           </div>
         </div>
 
-        {/* Word Display */}
         <div className="word-display" onClick={() => inputRef.current?.focus()}>
           <div className="words-container">
             {words.map((word, wIndex) => {
@@ -320,7 +363,6 @@ const TypingTest = () => {
                     }
                     return <span key={cIndex} className={charClass}>{char}</span>;
                   })}
-                  {/* Show extra typed characters */}
                   {wIndex === currentWordIndex && currentInput.length > word.length && (
                     <span className="wchar wc-extra">
                       {currentInput.slice(word.length)}
@@ -338,7 +380,6 @@ const TypingTest = () => {
           )}
         </div>
 
-        {/* Hidden Input */}
         <input
           ref={inputRef}
           type="text"
@@ -352,7 +393,6 @@ const TypingTest = () => {
           spellCheck="false"
         />
 
-        {/* Live Stats */}
         <div className="live-stats-bar">
           <div className="live-stat-item">
             <span className="lsi-value">{liveWPM}</span>
