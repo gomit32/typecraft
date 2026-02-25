@@ -6,6 +6,16 @@
   text-align: center;
   max-width: 700px;
   margin: 0 auto;
+  animation: scaleIn 0.4s ease;
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.4s ease;
 }
 
 .results-header {
@@ -16,9 +26,16 @@
   font-size: 4rem;
   display: block;
   margin-bottom: 10px;
+  animation: bounce 2s ease infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
 }
 
 .results-title {
+  font-family: 'Poppins', sans-serif;
   font-size: 2.2rem;
   font-weight: 800;
 }
@@ -29,7 +46,6 @@
   font-size: 1rem;
 }
 
-/* WPM Hero */
 .wpm-hero {
   padding: 30px;
   margin: 20px auto 30px;
@@ -37,6 +53,11 @@
   border: 3px solid;
   border-radius: 24px;
   background: var(--bg-tertiary);
+  transition: all 0.3s ease;
+}
+
+.wpm-hero:hover {
+  transform: scale(1.05);
 }
 
 .wpm-number {
@@ -59,7 +80,6 @@
   margin-top: 2px;
 }
 
-/* Stats Grid */
 .results-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -80,8 +100,9 @@
 }
 
 .result-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border-color: var(--accent-primary);
 }
 
 .result-item svg {
@@ -110,14 +131,11 @@
   flex-wrap: wrap;
 }
 
-.results-actions .btn-primary,
-.results-actions .btn-secondary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.results-btn {
   padding: 12px 28px;
   font-size: 1rem;
   font-weight: 600;
+  border-radius: 12px;
 }
 
 @media (max-width: 500px) {
