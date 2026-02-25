@@ -6,17 +6,17 @@
 }
 
 .toggle-track {
-  width: 50px;
+  width: 52px;
   height: 28px;
   border-radius: 14px;
   padding: 3px;
-  transition: all var(--transition-normal);
+  transition: all 0.4s ease;
   position: relative;
 }
 
 .toggle-track.dark {
   background: linear-gradient(135deg, #1a1a3e, #2a2a5a);
-  border: 1px solid var(--border-color);
+  border: 1px solid #3a3a6a;
 }
 
 .toggle-track.light {
@@ -28,22 +28,22 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--bg-card);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.7rem;
-  color: var(--accent-primary);
-  transition: all var(--transition-normal);
+  transition: all 0.4s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .toggle-track.dark .toggle-thumb {
   transform: translateX(0);
+  background: #2a2a5a;
   color: #ffd93d;
 }
 
 .toggle-track.light .toggle-thumb {
-  transform: translateX(22px);
+  transform: translateX(24px);
+  background: white;
   color: #ff8c00;
 }
