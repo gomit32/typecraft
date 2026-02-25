@@ -20,11 +20,15 @@ const Results = ({ results, onRestart, onNewTest }) => {
   const rating = getWPMRating(results.wpm);
 
   useEffect(() => {
-    if (results.wpm > 30) {
+    if (results.wpm > 20) {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 5000);
     }
   }, [results.wpm]);
+
+  const incorrectWords = results.incorrectWords !== undefined
+    ? results.incorrectWords
+    : (results.totalWordsAttempted || 0) - (results.correctWords || 0);
 
   return (
     <div className="results animate-scaleIn">
@@ -57,13 +61,13 @@ const Results = ({ results, onRestart, onNewTest }) => {
 
         <div className="result-item">
           <FaKeyboard style={{ color: '#6c63ff' }} />
-          <span className="ri-value">{results.correctWords || results.correctChars}</span>
+          <span className="ri-value">{results.correctWords || 0}</span>
           <span className="ri-label">Correct Words</span>
         </div>
 
         <div className="result-item">
           <FaKeyboard style={{ color: '#ff4757' }} />
-          <span className="ri-value">{results.totalWordsAttempted ? results.totalWordsAttempted - (results.correctWords || 0) : results.incorrectChars}</span>
+          <span className="ri-value">{incorrectWords}</span>
           <span className="ri-label">Wrong Words</span>
         </div>
 
@@ -75,7 +79,7 @@ const Results = ({ results, onRestart, onNewTest }) => {
 
         <div className="result-item">
           <FaChartLine style={{ color: '#ff6584' }} />
-          <span className="ri-value">{results.totalChars}</span>
+          <span className="ri-value">{results.totalChars || 0}</span>
           <span className="ri-label">Keystrokes</span>
         </div>
       </div>
