@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import TypingArea from './TypingArea';
 import Timer from './Timer';
 import Results from './Results';
 import Keyboard from './Keyboard';
 import useStore from '../../store/useStore';
+import useSound from '../../hooks/useSound';
 import { getEasyText } from '../../data/easyWords';
 import { getMediumText } from '../../data/mediumWords';
 import { getHardText } from '../../data/hardWords';
@@ -26,12 +26,12 @@ const DIFFICULTY_LEVELS = [
 ];
 
 const getTextForDifficulty = (difficulty, timeLimit) => {
-  const baseCount = Math.ceil(timeLimit / 2);
+  const baseCount = Math.ceil(timeLimit * 1.5);
   switch (difficulty) {
     case 'easy': return getEasyText(baseCount);
     case 'medium': return getMediumText(baseCount);
     case 'hard': return getHardText(Math.ceil(baseCount * 0.7));
-    case 'expert': return getExpertText(Math.max(3, Math.ceil(baseCount / 20)));
+    case 'expert': return getExpertText(Math.max(4, Math.ceil(baseCount / 15)));
     default: return getEasyText(baseCount);
   }
 };
@@ -42,32 +42,24 @@ const TypingTest = () => {
     updateBestWPM, incrementTests, addXP, updateStreak
   } = useStore();
 
-  const [text, setText] = useState('');
+  const [words, setWords] = useState([]);
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [currentInput, setCurrentInput] = useState('');
+  const [wordResults, setWordResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState(null);
   const [showSettings, setShowSettings] = useState(true);
-
-  // Typing state
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [charStatuses, setCharStatuses] = useState([]);
   const [isStarted, setIsStarted] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [currentKey, setCurrentKey] = useState('');
-  const [correctWords, setCorrectWords] = useState(0);
-  const [totalWordsAttempted, setTotalWordsAttempted] = useState(0);
-  const [correctChars, setCorrectChars] = useState(0);
-  const [totalCharsTyped, setTotalCharsTyped] = useState(0);
+  const [totalKeystrokes, setTotalKeystrokes] = useState(0);
+  const [correctKeystrokes, setCorrectKeystrokes] = useState(0);
 
-  // Timer state
   const [timeLeft, setTimeLeft] = useState(timeLimit);
-  const [elapsedTime, setElapsedTime] = useState(0);
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
-  const containerRef = useRef(null);
-
-  // Word-based tracking
-  const [currentWordStart, setCurrentWordStart] = useState(0);
-  const [currentWordHasError, setCurrentWordHasError] = useState(false);
+  const inputRef = useRef(null);
+  const { playSound } = useSound();
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) {
@@ -81,47 +73,41 @@ const TypingTest = () => {
     setIsFinished(true);
 
     const elapsed = startTimeRef.current
-      ? (Date.now() - startTimeRef.current) / 1000
+      ? Math.min((Date.now() - startTimeRef.current) / 1000, timeLimit)
       : timeLimit;
 
-    const finalElapsed = Math.min(elapsed, timeLimit);
-    const minutes = finalElapsed / 60;
-
+    const minutes = elapsed / 60;
+    const correctWords = wordResults.filter(w => w === 'correct').length;
+    const totalWordsTyped = wordResults.length;
     const wpm = minutes > 0 ? Math.round(correctWords / minutes) : 0;
-    const rawWpm = minutes > 0 ? Math.round((totalCharsTyped / 5) / minutes) : 0;
-    const accuracy = totalCharsTyped > 0
-      ? Math.round((correctChars / totalCharsTyped) * 100)
-      : 0;
-    const cpm = finalElapsed > 0
-      ? Math.round((correctChars / finalElapsed) * 60)
-      : 0;
+    const rawWpm = minutes > 0 ? Math.round(totalWordsTyped / minutes) : 0;
+    const accuracy = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 0;
+    const cpm = elapsed > 0 ? Math.round((correctKeystrokes / elapsed) * 60) : 0;
 
     const testResults = {
-      wpm: Math.max(wpm, 0),
-      rawWPM: Math.max(rawWpm, 0),
+      wpm,
+      rawWPM: rawWpm,
       accuracy,
-      correctChars,
-      incorrectChars: totalCharsTyped - correctChars,
-      totalChars: totalCharsTyped,
-      timeInSeconds: Math.round(finalElapsed),
+      correctChars: correctKeystrokes,
+      incorrectChars: totalKeystrokes - correctKeystrokes,
+      totalChars: totalKeystrokes,
+      timeInSeconds: Math.round(elapsed),
       cpm,
       correctWords,
-      totalWordsAttempted
+      totalWordsAttempted: totalWordsTyped
     };
 
     setResults(testResults);
     setShowResults(true);
+    playSound('complete');
 
     addToHistory({ ...testResults, difficulty, timeLimit });
     updateBestWPM(testResults.wpm);
     incrementTests();
     updateStreak();
-
-    const xpEarned = Math.round(testResults.wpm * (accuracy / 100));
-    addXP(Math.max(xpEarned, 1));
-  }, [stopTimer, timeLimit, correctWords, totalCharsTyped, correctChars,
-    totalWordsAttempted, difficulty, addToHistory, updateBestWPM,
-    incrementTests, addXP, updateStreak]);
+    addXP(Math.max(Math.round(wpm * (accuracy / 100)), 1));
+  }, [stopTimer, timeLimit, wordResults, totalKeystrokes, correctKeystrokes,
+    difficulty, addToHistory, updateBestWPM, incrementTests, addXP, updateStreak, playSound]);
 
   const startTimer = useCallback(() => {
     if (timerRef.current) return;
@@ -131,7 +117,6 @@ const TypingTest = () => {
       const elapsed = (Date.now() - startTimeRef.current) / 1000;
       const remaining = Math.max(0, timeLimit - Math.floor(elapsed));
       setTimeLeft(remaining);
-      setElapsedTime(Math.floor(elapsed));
 
       if (remaining <= 0) {
         finishTest();
@@ -139,101 +124,97 @@ const TypingTest = () => {
     }, 200);
   }, [timeLimit, finishTest]);
 
-  const handleKeyDown = useCallback((e) => {
-    if (isFinished || showResults) return;
-    if (!text) return;
+  const handleInput = useCallback((e) => {
+    if (isFinished) return;
 
-    const key = e.key;
-    setCurrentKey(key.toLowerCase());
+    const value = e.target.value;
 
-    // Start timer on first keypress
-    if (!isStarted && key.length === 1) {
+    if (!isStarted) {
       setIsStarted(true);
       startTimer();
     }
 
-    // Handle Backspace - but only within current word
-    if (key === 'Backspace') {
-      e.preventDefault();
-      // Find current word boundaries
-      if (currentIndex > currentWordStart) {
-        const newIndex = currentIndex - 1;
-        const newStatuses = [...charStatuses];
-        newStatuses[newIndex] = undefined;
-        setCharStatuses(newStatuses);
-        setCurrentIndex(newIndex);
+    // Space pressed = submit word
+    if (value.endsWith(' ')) {
+      const typed = value.trim();
+      const expected = words[currentWordIndex];
+
+      if (typed.length === 0) return;
+
+      // Check if word is correct
+      const isCorrect = typed === expected;
+      setWordResults(prev => [...prev, isCorrect ? 'correct' : 'incorrect']);
+
+      // Count keystrokes
+      const wordLen = expected.length;
+      setTotalKeystrokes(prev => prev + typed.length);
+
+      if (isCorrect) {
+        setCorrectKeystrokes(prev => prev + wordLen);
+        playSound('keypress');
+      } else {
+        // Count correct characters within the word
+        let correctCharsInWord = 0;
+        for (let i = 0; i < Math.min(typed.length, expected.length); i++) {
+          if (typed[i] === expected[i]) correctCharsInWord++;
+        }
+        setCorrectKeystrokes(prev => prev + correctCharsInWord);
+        playSound('error');
+      }
+
+      // Move to next word
+      setCurrentWordIndex(prev => prev + 1);
+      setCurrentInput('');
+
+      // Check if all words done
+      if (currentWordIndex + 1 >= words.length) {
+        finishTest();
       }
       return;
     }
 
-    // Only handle single characters
-    if (key.length !== 1) return;
-    e.preventDefault();
+    setCurrentInput(value);
+    setCurrentKey(value.length > 0 ? value[value.length - 1] : '');
+  }, [isFinished, isStarted, words, currentWordIndex, startTimer, finishTest, playSound]);
 
-    const expectedChar = text[currentIndex];
-    if (expectedChar === undefined) return;
-
-    const newStatuses = [...charStatuses];
-    const isCorrect = key === expectedChar;
-
-    if (isCorrect) {
-      newStatuses[currentIndex] = 'correct';
-      setCorrectChars(prev => prev + 1);
-    } else {
-      newStatuses[currentIndex] = 'incorrect';
-      setCurrentWordHasError(true);
-    }
-
-    setCharStatuses(newStatuses);
-    setTotalCharsTyped(prev => prev + 1);
-    setCurrentIndex(prev => prev + 1);
-
-    // Check if we just completed a word (next char is space or end of text)
-    const nextChar = text[currentIndex + 1];
-    if (expectedChar === ' ' || currentIndex + 1 >= text.length) {
-      // Word completed
-      setTotalWordsAttempted(prev => prev + 1);
-      if (!currentWordHasError && isCorrect) {
-        setCorrectWords(prev => prev + 1);
-      }
-      // Reset for next word
-      setCurrentWordStart(currentIndex + 1);
-      setCurrentWordHasError(false);
-    }
-
-    // Check if we reached the end of text
-    if (currentIndex + 1 >= text.length) {
-      finishTest();
-    }
-  }, [currentIndex, text, charStatuses, isStarted, isFinished, showResults,
-    startTimer, finishTest, currentWordStart, currentWordHasError]);
-
-  // Focus container
   useEffect(() => {
-    if (!showSettings && containerRef.current) {
-      containerRef.current.focus();
-    }
-  }, [showSettings]);
+    return () => stopTimer();
+  }, [stopTimer]);
 
-  const handleRestart = () => {
-    stopTimer();
-    setCurrentIndex(0);
-    setCharStatuses([]);
+  const handleStartTest = () => {
+    const text = getTextForDifficulty(difficulty, timeLimit);
+    setWords(text.split(' '));
+    setCurrentWordIndex(0);
+    setCurrentInput('');
+    setWordResults([]);
     setIsStarted(false);
     setIsFinished(false);
     setCurrentKey('');
-    setCorrectWords(0);
-    setTotalWordsAttempted(0);
-    setCorrectChars(0);
-    setTotalCharsTyped(0);
+    setTotalKeystrokes(0);
+    setCorrectKeystrokes(0);
     setTimeLeft(timeLimit);
-    setElapsedTime(0);
     setShowResults(false);
     setResults(null);
-    setCurrentWordStart(0);
-    setCurrentWordHasError(false);
+    setShowSettings(false);
     startTimeRef.current = null;
-    setTimeout(() => containerRef.current?.focus(), 100);
+    setTimeout(() => inputRef.current?.focus(), 100);
+  };
+
+  const handleRestart = () => {
+    stopTimer();
+    setCurrentWordIndex(0);
+    setCurrentInput('');
+    setWordResults([]);
+    setIsStarted(false);
+    setIsFinished(false);
+    setCurrentKey('');
+    setTotalKeystrokes(0);
+    setCorrectKeystrokes(0);
+    setTimeLeft(timeLimit);
+    setShowResults(false);
+    setResults(null);
+    startTimeRef.current = null;
+    setTimeout(() => inputRef.current?.focus(), 100);
   };
 
   const handleNewTest = () => {
@@ -243,49 +224,14 @@ const TypingTest = () => {
     setShowSettings(true);
   };
 
-  const handleStartTest = () => {
-    const newText = getTextForDifficulty(difficulty, timeLimit);
-    setText(newText);
-    setCurrentIndex(0);
-    setCharStatuses([]);
-    setIsStarted(false);
-    setIsFinished(false);
-    setCurrentKey('');
-    setCorrectWords(0);
-    setTotalWordsAttempted(0);
-    setCorrectChars(0);
-    setTotalCharsTyped(0);
-    setTimeLeft(timeLimit);
-    setElapsedTime(0);
-    setShowResults(false);
-    setResults(null);
-    setShowSettings(false);
-    setCurrentWordStart(0);
-    setCurrentWordHasError(false);
-    startTimeRef.current = null;
-    setTimeout(() => containerRef.current?.focus(), 100);
-  };
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => stopTimer();
-  }, [stopTimer]);
-
   if (showResults && results) {
-    return (
-      <Results
-        results={results}
-        onRestart={handleRestart}
-        onNewTest={handleNewTest}
-      />
-    );
+    return <Results results={results} onRestart={handleRestart} onNewTest={handleNewTest} />;
   }
 
   if (showSettings) {
     return (
       <div className="typing-test">
         <div className="test-settings animate-fadeInUp">
-          {/* Difficulty Selection */}
           <div className="setting-group">
             <h3 className="setting-label">Difficulty</h3>
             <div className="difficulty-grid">
@@ -303,8 +249,6 @@ const TypingTest = () => {
               ))}
             </div>
           </div>
-
-          {/* Time Selection */}
           <div className="setting-group">
             <h3 className="setting-label">Duration</h3>
             <div className="time-grid">
@@ -320,74 +264,93 @@ const TypingTest = () => {
               ))}
             </div>
           </div>
-
           <div className="test-start-area">
-            <button className="btn-primary start-btn" onClick={handleStartTest}>
-              ⌨️ Start Typing Test
-            </button>
+            <button className="btn-primary start-btn" onClick={handleStartTest}>⌨️ Start Typing Test</button>
           </div>
         </div>
       </div>
     );
   }
 
-  // Calculate live WPM
-  const liveMinutes = elapsedTime / 60;
-  const liveWPM = liveMinutes > 0 ? Math.round(correctWords / liveMinutes) : 0;
+  // Calculate live stats
+  const elapsed = startTimeRef.current ? (Date.now() - startTimeRef.current) / 1000 / 60 : 0;
+  const liveCorrectWords = wordResults.filter(w => w === 'correct').length;
+  const liveWPM = elapsed > 0 ? Math.round(liveCorrectWords / elapsed) : 0;
+  const liveAccuracy = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 100;
 
   return (
     <div className="typing-test">
-      <div className="test-active" ref={containerRef} tabIndex={0} onKeyDown={handleKeyDown}>
+      <div className="test-active">
         <div className="test-header">
-          <div className="test-info">
-            <span className="test-difficulty-badge" style={{
-              background: `${DIFFICULTY_LEVELS.find(d => d.id === difficulty)?.color}22`,
-              color: DIFFICULTY_LEVELS.find(d => d.id === difficulty)?.color
-            }}>
-              {DIFFICULTY_LEVELS.find(d => d.id === difficulty)?.icon}{' '}
-              {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
-            </span>
-          </div>
-
-          <div className="timer-section">
-            <Timer timeLeft={timeLeft} totalTime={timeLimit} />
-          </div>
-
+          <span className="test-difficulty-badge" style={{
+            background: `${DIFFICULTY_LEVELS.find(d => d.id === difficulty)?.color}22`,
+            color: DIFFICULTY_LEVELS.find(d => d.id === difficulty)?.color
+          }}>
+            {DIFFICULTY_LEVELS.find(d => d.id === difficulty)?.icon}{' '}
+            {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+          </span>
+          <Timer timeLeft={timeLeft} totalTime={timeLimit} />
           <div className="test-actions">
-            <button className="btn-icon" onClick={handleNewTest} title="Settings">
-              <FaCog />
-            </button>
-            <button className="btn-icon" onClick={handleRestart} title="Restart">
-              <FaRedo />
-            </button>
+            <button className="btn-icon" onClick={handleNewTest}><FaCog /></button>
+            <button className="btn-icon" onClick={handleRestart}><FaRedo /></button>
           </div>
         </div>
 
-        {/* Typing Display */}
-        <div className={`typing-display ${isFinished ? 'finished' : ''} ${isStarted ? 'focused' : ''}`}>
-          <div className="typing-text-content">
-            {text.split('').map((char, index) => {
-              let className = 'tchar';
-              if (index < currentIndex) {
-                className += charStatuses[index] === 'correct' ? ' correct' : ' incorrect';
-              } else if (index === currentIndex) {
-                className += ' current';
-              } else {
-                className += ' upcoming';
+        {/* Word Display */}
+        <div className="word-display" onClick={() => inputRef.current?.focus()}>
+          <div className="words-container">
+            {words.map((word, wIndex) => {
+              let wordClass = 'word';
+              if (wIndex < currentWordIndex) {
+                wordClass += wordResults[wIndex] === 'correct' ? ' word-correct' : ' word-incorrect';
+              } else if (wIndex === currentWordIndex) {
+                wordClass += ' word-active';
               }
+
               return (
-                <span key={index} className={className}>
-                  {char === ' ' ? '\u00A0' : char}
+                <span key={wIndex} className={wordClass}>
+                  {word.split('').map((char, cIndex) => {
+                    let charClass = 'wchar';
+                    if (wIndex === currentWordIndex) {
+                      if (cIndex < currentInput.length) {
+                        charClass += currentInput[cIndex] === char ? ' wc-correct' : ' wc-incorrect';
+                      } else if (cIndex === currentInput.length) {
+                        charClass += ' wc-current';
+                      }
+                    }
+                    return <span key={cIndex} className={charClass}>{char}</span>;
+                  })}
+                  {/* Show extra typed characters */}
+                  {wIndex === currentWordIndex && currentInput.length > word.length && (
+                    <span className="wchar wc-extra">
+                      {currentInput.slice(word.length)}
+                    </span>
+                  )}
                 </span>
               );
             })}
           </div>
+
           {!isStarted && (
             <div className="typing-overlay">
               <p>👆 Click here and start typing...</p>
             </div>
           )}
         </div>
+
+        {/* Hidden Input */}
+        <input
+          ref={inputRef}
+          type="text"
+          value={currentInput}
+          onChange={handleInput}
+          className="hidden-input"
+          autoFocus
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck="false"
+        />
 
         {/* Live Stats */}
         <div className="live-stats-bar">
@@ -396,18 +359,18 @@ const TypingTest = () => {
             <span className="lsi-label">WPM</span>
           </div>
           <div className="live-stat-item">
-            <span className="lsi-value">{correctWords}</span>
+            <span className="lsi-value">{liveCorrectWords}</span>
             <span className="lsi-label">Words</span>
           </div>
           <div className="live-stat-item">
-            <span className="lsi-value" style={{ color: totalCharsTyped - correctChars > 0 ? '#ff4757' : '#2ed573' }}>
-              {totalCharsTyped > 0 ? Math.round((correctChars / totalCharsTyped) * 100) : 100}%
+            <span className="lsi-value" style={{ color: liveAccuracy < 90 ? '#ff4757' : '#2ed573' }}>
+              {liveAccuracy}%
             </span>
             <span className="lsi-label">Accuracy</span>
           </div>
           <div className="live-stat-item">
             <span className="lsi-value" style={{ color: '#ff4757' }}>
-              {totalCharsTyped - correctChars}
+              {wordResults.filter(w => w === 'incorrect').length}
             </span>
             <span className="lsi-label">Errors</span>
           </div>
