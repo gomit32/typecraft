@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaHeart, FaKeyboard, FaGithub } from 'react-icons/fa';
+import { FaHeart } from 'react-icons/fa';
 import './Footer.css';
 
 const Footer = () => {
